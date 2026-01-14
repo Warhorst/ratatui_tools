@@ -5,7 +5,7 @@ use ratatui::{
     symbols::border,
     widgets::Block,
 };
-use ratatui_tools::tilemap::{Character, TileMap};
+use ratatui_tools::tilemap::{Char, TileMap};
 
 pub fn main() -> std::io::Result<()> {
     ratatui::run(|t| App::default().run(t))
@@ -27,9 +27,9 @@ impl App {
 
                 let tile_map = TileMap::default()
                     .block(block)
-                    .clear_character(Character::new('#', Color::White, Color::Gray))
+                    .clear_character(Char::new('#', Color::White).bg(Color::Gray))
                     .paint(|tiles| {
-                        tiles.set_tile(5, 5, '@', Color::Black, Color::Gray);
+                        tiles.set_tile(0, 0, Char::new('@', Color::Black));
                     });
 
                 frame.render_widget(tile_map, frame.area());
