@@ -94,7 +94,7 @@ where
             tiles
                 .0
                 .into_iter()
-                .map(|(p, c)| (Position::new(area.x + p.x, area.y + p.y), c))
+                .map(|((x, y), c)| (Position::new(area.x + x as u16, area.y + y as u16), c))
                 .filter(|(p, _)| area.contains(*p))
                 .for_each(|(p, c)| c.draw_on_cell(&mut buf[p]));
         }
@@ -103,22 +103,25 @@ where
 
 /// A container for [Char]s which should be drawn on a [TileMap].
 #[derive(Default)]
-pub struct Tiles(Vec<(Position, Char)>);
+pub struct Tiles(Vec<((isize, isize), Char)>);
 
 impl Tiles {
     /// Draw a [Char] at the given x and y coordinates on the [TileMap].
     /// The origin of the [TileMap] is in the top left corner.
     pub fn set_tile(
         &mut self,
-        x: u16,
-        y: u16,
+        x: isize,
+        y: isize,
         char: Char,
     ) {
-        self.0.push((Position::new(x, y), char));
+        if x >= 0 && x <= u16::MAX as isize && y >= 0 && y <= u16::MAX as isize {
+            // isize is used as coordinates for convinience, but values outside the u16 range are filtered out
+            self.0.push(((x, y), char));
+        }
     }
 }
 
-/// A combination of a [char] and its [Color]s. 
+/// A combination of a [char] and its [Color]s.
 #[derive(Clone, Copy, Debug)]
 pub struct Char {
     /// The [char] to draw on the [TileMap].

@@ -30,6 +30,12 @@ impl App {
                     .clear_character(Char::new('#', Color::White).bg(Color::Gray))
                     .paint(|tiles| {
                         tiles.set_tile(10, 10, Char::new('@', Color::Black));
+
+                        // Outside of bounds, should not be drawn
+                        tiles.set_tile(-5, -5, Char::new('#', Color::Black));
+
+                        // Outside of bounds, should not be drawn
+                        tiles.set_tile(100000, 100000, Char::new('#', Color::Black));
                     });
 
                 frame.render_widget(tile_map, frame.area());
