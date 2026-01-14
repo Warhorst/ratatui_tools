@@ -29,7 +29,7 @@ impl App {
                     .block(block)
                     .clear_character(Char::new('#', Color::White).bg(Color::Gray))
                     .paint(|tiles| {
-                        tiles.set_tile(0, 0, Char::new('@', Color::Black));
+                        tiles.set_tile(10, 10, Char::new('@', Color::Black));
                     });
 
                 frame.render_widget(tile_map, frame.area());

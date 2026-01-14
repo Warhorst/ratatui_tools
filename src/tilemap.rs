@@ -6,6 +6,8 @@ use ratatui_core::{
 };
 use ratatui_widgets::block::Block;
 
+/// A [Widget] which allows to draw [char]s on [Cell] positions.
+/// This can therefore be used to create a tile map, used in games, visualizations, etc. .
 pub struct TileMap<'a, F>
 where
     F: Fn(&mut Tiles),
@@ -32,6 +34,8 @@ impl<'a, F> TileMap<'a, F>
 where
     F: Fn(&mut Tiles),
 {
+    /// The [Char] used for positions were nothing is drawn, according to the
+    /// [TileMap::paint] closure. If not set, nothing will be drawn on clear [Cell]s.
     pub fn clear_character(
         mut self,
         character: Char,
@@ -40,6 +44,8 @@ where
         self
     }
 
+    /// The [Block] that will be drawn around the [TileMap]. If not set,
+    /// no [Block] will be drawn.
     pub fn block(
         mut self,
         block: Block<'a>,
@@ -48,6 +54,9 @@ where
         self
     }
 
+    /// The closure used to draw [Char]s on the [TileMap].
+    /// If not set, nothing will be drawn.
+    /// The origin of the [TileMap] is in the top left corner.
     pub fn paint(
         mut self,
         paint: F,
@@ -92,10 +101,13 @@ where
     }
 }
 
+/// A container for [Char]s which should be drawn on a [TileMap].
 #[derive(Default)]
 pub struct Tiles(Vec<(Position, Char)>);
 
 impl Tiles {
+    /// Draw a [Char] at the given x and y coordinates on the [TileMap].
+    /// The origin of the [TileMap] is in the top left corner.
     pub fn set_tile(
         &mut self,
         x: u16,
@@ -106,14 +118,19 @@ impl Tiles {
     }
 }
 
+/// A combination of a [char] and its [Color]s. 
 #[derive(Clone, Copy, Debug)]
 pub struct Char {
+    /// The [char] to draw on the [TileMap].
     c: char,
+    /// The [Color] used for the foreground.
     fg: Color,
+    /// The [Color] used for the background.
     bg: Option<Color>,
 }
 
 impl Char {
+    /// Create a new [Char] with the given [char] and foreground [Color].
     pub fn new(
         c: char,
         fg: Color,
@@ -121,6 +138,8 @@ impl Char {
         Char { c, fg, bg: None }
     }
 
+    /// Set the background [Color] for this [Char]. If not set,
+    /// the existing background at the position of the [Char] will be used.
     pub fn bg(
         mut self,
         bg: Color,
