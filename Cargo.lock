@@ -922,6 +922,7 @@ dependencies = [
  "ratatui",
  "ratatui-core",
  "ratatui-widgets",
+ "smallvec",
 ]
 
 [[package]]
