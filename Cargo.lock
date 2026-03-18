@@ -921,8 +921,8 @@ version = "1.3.0"
 dependencies = [
  "ratatui",
  "ratatui-core",
+ "ratatui-crossterm",
  "ratatui-widgets",
- "smallvec",
 ]
 
 [[package]]
