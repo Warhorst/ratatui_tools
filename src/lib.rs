@@ -9,8 +9,8 @@ pub mod text_input;
 pub mod tilemap;
 
 pub struct Framework<S, F, M> {
-    state: S,
-    focus: F,
+    pub state: S,
+    pub focus: F,
     sender: Sender<FrameworkEvent<M>>,
     receiver: Receiver<FrameworkEvent<M>>,
 }
