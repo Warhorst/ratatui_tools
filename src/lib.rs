@@ -8,6 +8,9 @@ pub mod cells;
 pub mod text_input;
 pub mod tilemap;
 
+/// Wrapper around ratatui which utilizes the [`Component`] pattern
+/// to build TUIs. The Framework manages an internal MPSC channel which allows
+/// other threads to send messages to the TUI, which manipulates its state.
 pub struct Framework<S, F, M> {
     pub state: S,
     pub focus: F,
@@ -16,6 +19,9 @@ pub struct Framework<S, F, M> {
 }
 
 impl<S, F, M> Framework<S, F, M> where M: 'static + Send {
+    /// Create a new [`Framework`].
+    /// - `initial_state`: The initial state of the framework
+    /// - `initial_focus`: The initial focus of the framework
     pub fn new(
         initial_state: S,
         initial_focus: F,
@@ -30,10 +36,17 @@ impl<S, F, M> Framework<S, F, M> where M: 'static + Send {
         }
     }
 
+    /// Create a new sender which can be used by external threads to send messages
+    /// to the framework.
     pub fn message_sender(&self) -> MessageSender<M> {
         MessageSender::new(self.sender.clone())
     }
 
+    /// Run the framework, which renders the UI and starts the event / message handling.
+    ///
+    /// - `core_component`: The [`Component`] which contains all other [`Components`]. This is the entrypoint into rendering the TUI and handling events.
+    /// - `message_handler`: Closure which processes messages and modifies the state of the app.
+    /// - `is_exit`: Closure which checks if a received input event indicates a shutdown of the app. If this returns always false, the app must be closed by other means.
     pub fn run(
         mut self,
         mut core_component: impl Component<S, F, M>,
@@ -80,11 +93,15 @@ impl<S, F, M> Framework<S, F, M> where M: 'static + Send {
     }
 }
 
+/// An event sent to the [`Framework`].
 enum FrameworkEvent<M> {
+    /// An input event from ratatui
     RatatuiEvent(Event),
+    /// A message which causes a state change
     AppMessage(M),
 }
 
+/// Allows to send messages to a [`Framework`].
 #[derive(Clone)]
 pub struct MessageSender<M> {
     sender: Sender<FrameworkEvent<M>>,
@@ -95,6 +112,7 @@ impl<M> MessageSender<M> {
         MessageSender { sender }
     }
 
+    /// Send the given messsage to the [`Framework`] which created this [`MessageSender`].
     pub fn send(
         &self,
         message: M,
