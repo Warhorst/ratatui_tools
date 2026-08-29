@@ -1,9 +1,109 @@
+use std::{sync::mpsc::{Receiver, Sender, channel}, thread};
+
+use ratatui::crossterm::event;
 use ratatui_core::{layout::Rect, terminal::Frame};
 use ratatui_crossterm::crossterm::event::Event;
 
 pub mod cells;
 pub mod text_input;
 pub mod tilemap;
+
+pub struct Framework<S, F, M> {
+    state: S,
+    focus: F,
+    sender: Sender<FrameworkEvent<M>>,
+    receiver: Receiver<FrameworkEvent<M>>,
+}
+
+impl<S, F, M> Framework<S, F, M> where M: 'static + Send {
+    pub fn new(
+        initial_state: S,
+        initial_focus: F,
+    ) -> Self {
+        let (sender, receiver) = channel();
+
+        Framework {
+            state: initial_state,
+            focus: initial_focus,
+            sender,
+            receiver,
+        }
+    }
+
+    pub fn message_sender(&self) -> MessageSender<M> {
+        MessageSender::new(self.sender.clone())
+    }
+
+    pub fn run(
+        mut self,
+        mut core_component: impl Component<S, F, M>,
+        message_handler: impl Fn(M, &mut Self),
+        is_exit: impl Fn(&Event) -> bool
+    ) -> std::io::Result<()> {
+        // Start the input handler thread
+        let sender = self.sender.clone();
+        thread::spawn(move || {
+            loop {
+                let event = event::read().expect("Input event should be readable");
+                sender.send(FrameworkEvent::RatatuiEvent(event)).expect("Failed to send framework event");
+            }
+        });
+    
+        ratatui::run(|terminal| {
+            loop {
+                terminal.draw(|frame| {
+                    core_component.render(frame, frame.area(), &self.state, &self.focus);
+                })?;
+
+                match self
+                    .receiver
+                    .recv()
+                    .expect("Framework event should be receivable")
+                {
+                    FrameworkEvent::RatatuiEvent(event) => {
+                        if is_exit(&event) {
+                            break
+                        } else if let Some(message) =
+                            core_component.handle_event(event, &self.state, &mut self.focus)
+                        {
+                            message_handler(message, &mut self)
+                        }
+                    }
+                    FrameworkEvent::AppMessage(message) => {
+                        message_handler(message, &mut self)
+                    }
+                }
+            }
+
+            Ok(())
+        })
+    }
+}
+
+enum FrameworkEvent<M> {
+    RatatuiEvent(Event),
+    AppMessage(M),
+}
+
+#[derive(Clone)]
+pub struct MessageSender<M> {
+    sender: Sender<FrameworkEvent<M>>,
+}
+
+impl<M> MessageSender<M> {
+    fn new(sender: Sender<FrameworkEvent<M>>) -> Self {
+        MessageSender { sender }
+    }
+
+    pub fn send(
+        &self,
+        message: M,
+    ) {
+        self.sender
+            .send(FrameworkEvent::AppMessage(message))
+            .expect("Send of message failed");
+    }
+}
 
 /// A [Component] is a struct which combines the rendering of some UI component and the handling
 /// of events. The event handling emmits messages, which are intended for an [ELM](https://guide.elm-lang.org/architecture/) like architecture.

@@ -4,9 +4,8 @@ version = "1.4.0"
 edition = "2024"
 
 [dependencies]
+# TODO maybe reduce to just ratatui
+ratatui = "0.30.0"
 ratatui-core = "0.1.0"
 ratatui-widgets = "0.3.0"
 ratatui-crossterm = "0.1.0"
-
-[dev-dependencies]
-ratatui = "0.30.0"
